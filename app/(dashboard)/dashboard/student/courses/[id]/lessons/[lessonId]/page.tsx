@@ -1,12 +1,37 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { notFound } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, PlayCircle, FileText, CheckCircle, MessageCircle } from "lucide-react"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  ChevronLeft,
+  ChevronRight,
+  PlayCircle,
+  FileText,
+  CheckCircle,
+  MessageCircle,
+} from "lucide-react";
+
+interface Attachment {
+  id: number;
+  name: string;
+  type: string;
+}
+
+interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  duration: string;
+  content: string;
+  attachments: Attachment[];
+  prevLessonId?: string | null;
+  nextLessonId?: string | null;
+  courseId?: string;
+}
 
 // Mock function to simulate fetching lesson data from API
 async function getLesson(courseId: string, lessonId: string) {
@@ -14,7 +39,8 @@ async function getLesson(courseId: string, lessonId: string) {
   return {
     id: lessonId,
     title: "Introduction to Linear Equations",
-    description: "Learn the fundamentals of linear equations and their applications in real-world scenarios.",
+    description:
+      "Learn the fundamentals of linear equations and their applications in real-world scenarios.",
     videoUrl: "https://example.com/lesson-video",
     duration: "45 minutes",
     content: `
@@ -46,28 +72,37 @@ async function getLesson(courseId: string, lessonId: string) {
     `,
     attachments: [
       { id: 1, name: "Lecture Notes.pdf", type: "pdf" },
-      { id: 2, name: "Practice Problems.pdf", type: "pdf" }
+      { id: 2, name: "Practice Problems.pdf", type: "pdf" },
     ],
     courseId: courseId,
     nextLessonId: "2",
-    prevLessonId: null
+    prevLessonId: null,
+  };
+}
+
+export default function LessonPage({
+  params,
+}: {
+  params: { id: string; lessonId: string };
+}) {
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getLesson(params.id, params.lessonId).then((data) => {
+      setLesson(data);
+      setLoading(false);
+    });
+  }, [params.id, params.lessonId]);
+
+  if (loading) {
+    return (
+      <div className="container max-w-6xl mx-auto py-8 px-4">Loading...</div>
+    );
   }
-}
 
-// This function is required for static site generation with dynamic routes
-export function generateStaticParams() {
-  return [
-    { courseId: '101', lessonId: '1' },
-    { courseId: '101', lessonId: '2' },
-    // Add more course/lesson combinations as needed
-  ]
-}
-
-export default async function LessonPage({ params }: { params: { id: string, lessonId: string } }) {
-  const lesson = await getLesson(params.id, params.lessonId)
-  
   if (!lesson) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -79,19 +114,23 @@ export default async function LessonPage({ params }: { params: { id: string, les
             Back to Course
           </Button>
         </Link>
-        
+
         <div className="flex items-center gap-2">
           {lesson.prevLessonId && (
-            <Link href={`/dashboard/student/courses/${params.id}/lessons/${lesson.prevLessonId}`}>
+            <Link
+              href={`/dashboard/student/courses/${params.id}/lessons/${lesson.prevLessonId}`}
+            >
               <Button variant="outline" size="sm" className="gap-1">
                 <ChevronLeft className="h-4 w-4" />
                 Previous
               </Button>
             </Link>
           )}
-          
+
           {lesson.nextLessonId && (
-            <Link href={`/dashboard/student/courses/${params.id}/lessons/${lesson.nextLessonId}`}>
+            <Link
+              href={`/dashboard/student/courses/${params.id}/lessons/${lesson.nextLessonId}`}
+            >
               <Button variant="outline" size="sm" className="gap-1">
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -117,28 +156,36 @@ export default async function LessonPage({ params }: { params: { id: string, les
               <span>{lesson.duration}</span>
             </div>
           </Card>
-          
+
           <Card className="mt-6 p-8 shadow-lg">
-            <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: lesson.content }} />
+            <div
+              className="prose dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: lesson.content }}
+            />
           </Card>
         </div>
-        
+
         <div className="space-y-6">
           <Card className="p-6 shadow-lg">
             <h3 className="text-lg font-semibold mb-4">Attachments</h3>
             <div className="space-y-3">
-              {lesson.attachments.map(attachment => (
-                <div key={attachment.id} className="flex items-center justify-between p-3 bg-muted/40 rounded-lg hover:bg-muted/70 transition-colors">
+              {lesson.attachments.map((attachment: Attachment) => (
+                <div
+                  key={attachment.id}
+                  className="flex items-center justify-between p-3 bg-muted/40 rounded-lg hover:bg-muted/70 transition-colors"
+                >
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-primary" />
                     <span>{attachment.name}</span>
                   </div>
-                  <Button variant="ghost" size="sm">Download</Button>
+                  <Button variant="ghost" size="sm">
+                    Download
+                  </Button>
                 </div>
               ))}
             </div>
           </Card>
-          
+
           <Card className="p-6 shadow-lg">
             <h3 className="text-lg font-semibold mb-4">Actions</h3>
             <div className="space-y-3">
@@ -155,5 +202,5 @@ export default async function LessonPage({ params }: { params: { id: string, les
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

@@ -1,0 +1,12 @@
+{
+  "name": "deploy",
+  "scripts": {
+    "build:static": "next build && next export",
+    "build:dynamic": "next build",
+    "start:prod": "next start",
+    "preview": "next build && next start",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir=out",
+    "health-check": "curl -f http://localhost:3000/api/health || exit 1"
+  }
+}
